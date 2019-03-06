@@ -58,8 +58,8 @@ def gradient_decent(x):
     global lr
     global epoch
     global batch
-
-    
+    global lamda
+    global result
     w = np.random.rand(18,9)
     b = np.random.rand(1)
 
@@ -84,10 +84,10 @@ def gradient_decent(x):
         while (batch_s < n):
             
             delta = y[batch_s:batch_e+1] - (w * x[batch_s:batch_e+1,:,:9]).sum(axis=1).sum(axis=1, keepdims = True) -b
-            loss += (delta ** 2).sum()
+            loss += (delta ** 2).sum() + (lamda*w*w).sum()
             
             delta = np.expand_dims(delta, axis=1)
-            w_g = (delta * x[batch_s:batch_e + 1,:,:9])
+            w_g = (delta * x[batch_s:batch_e + 1,:,:9])+2*lamda*w
             w_gradient = -1*w_g.sum(axis=0)
             b_gradient = -1*delta.sum()
 
@@ -104,15 +104,18 @@ def gradient_decent(x):
                 batch_e = batch_e + batch
             else:
                 batch_e = n - 1
-            
+        if (epo % 100 == 0):
+            result.append(loss/n)
         print("[epoch] ", epo+1, "       [loss] ", loss/n)
     return w, b, loss/n
 
 
 if __name__ == "__main__":
-    lr = 0.05
-    epoch = 200000
+    lr = 0.0001
+    epoch = 100000
     batch = 471
+    lamda = 0.1
+    result = []
     
     all_data = np.genfromtxt('train.csv', delimiter=',', encoding="latin1")
     all_data = all_data[1:, 3:]
@@ -121,3 +124,4 @@ if __name__ == "__main__":
 
     np.save('w_'+str(lr)+'_'+str(epoch)+'_'+str(batch)+'_l='+str(lo), w)
     np.save('b_'+str(lr)+'_'+str(epoch)+'_'+str(batch)+'_l='+str(lo), b)
+    np.save('loss2epo_lamda='+str(lamda), result)
