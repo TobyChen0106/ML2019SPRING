@@ -32,7 +32,14 @@ def preprocess(A):
                     else:
                         month[kind][n] = month[kind][left_ref] + (
                             month[kind][right_ref]-month[kind][left_ref])*(n-left_ref)/(right_ref-left_ref)
-    
+    # with open('new_data.csv', 'w', newline='') as csvfile:
+    #     writer = csv.writer(csvfile)
+    #     for month in month_data:
+    #         for kind in range(month.shape[0]):
+    #             # plt.plot(month[kind])
+    #             writer.writerow(month[kind])
+    #             # print(month_data[0,10])
+    # print(month_data.shape)
     x = []
     # y = []
     for month in month_data:
@@ -51,14 +58,15 @@ def gradient_decent(x):
     global lr
     global epoch
     global batch
+    global result
+    global lamda
 
-    
-    w = np.random.rand(18,9)
+    w = np.random.rand(1,9)
     b = np.random.rand(1)
 
     
     n = x.shape[0]
-    w_var = np.zeros((18,9))
+    w_var = np.zeros((1,9))
     b_var = 0
     for epo in range(epoch):
         np.random.shuffle(x)
@@ -66,7 +74,7 @@ def gradient_decent(x):
         # print('y_shape', y.shape)
 
         loss = 0
-        w_gradient = np.zeros((18, 9))
+        w_gradient = np.zeros((1, 9))
         b_gradient = np.zeros((1))
         
         batch_s = 0
@@ -75,15 +83,19 @@ def gradient_decent(x):
         else:
             batch_e = n - 1
         while (batch_s < n):
-            
-            delta = y[batch_s:batch_e+1] - (w * x[batch_s:batch_e+1,:,:9]).sum(axis=1).sum(axis=1, keepdims = True) -b
-            loss += (delta ** 2).sum()
+            # print(x.shape)
+            # print(( w * np.expand_dims(x[batch_s:batch_e+1,9,:9], axis = 1) ).shape)
+
+            # delta = y[batch_s:batch_e+1] - (w * x[batch_s:batch_e+1,9,:9]).sum(axis=1).sum(axis=1, keepdims = True) -b
+            delta = y[batch_s:batch_e+1] - (w * np.expand_dims(x[batch_s:batch_e+1,9,:9], axis = 1)).sum(axis=1).sum(axis=1, keepdims = True) -b
+            loss += (delta ** 2).sum() + (lamda * w * w).sum()
             
             delta = np.expand_dims(delta, axis=1)
-            w_g = (delta * x[batch_s:batch_e + 1,:,:9])
+            w_g = (delta * np.expand_dims(x[batch_s:batch_e+1,9,:9], axis = 1))-2*lamda*w
+            
             w_gradient = -1*w_g.sum(axis=0)
             b_gradient = -1*delta.sum()
-
+            # print(w_g.shape)
             # w_gradient -= w_g.sum(axis=0)
             # b_gradient -= delta.sum()
             w_var += (w_gradient ** 2)
@@ -97,20 +109,26 @@ def gradient_decent(x):
                 batch_e = batch_e + batch
             else:
                 batch_e = n - 1
-            
+        if (epo % 100 == 0):
+            result.append(loss/n)
         print("[epoch] ", epo+1, "       [loss] ", loss/n)
     return w, b, loss/n
 
 
 if __name__ == "__main__":
-    lr = 0.05
-    epoch = 200000
+    lr = 0.1
+    epoch = 100000
     batch = 471
     
+    lamda = 0.0001
+    
+    result = []
+
     all_data = np.genfromtxt('train.csv', delimiter=',', encoding="latin1")
     all_data = all_data[1:, 3:]
     train_data= preprocess(all_data)
     w, b, lo = gradient_decent(train_data)
 
-    np.save('w_'+str(lr)+'_'+str(epoch)+'_'+str(batch)+'_l='+str(lo), w)
-    np.save('b_'+str(lr)+'_'+str(epoch)+'_'+str(batch)+'_l='+str(lo), b)
+    np.save('w_'+str(lr)+'_'+str(epoch)+'_'+str(batch)+'_l='+str(lo)+'_lamda='+str(lamda), w)
+    np.save('b_'+str(lr)+'_'+str(epoch)+'_'+str(batch)+'_l='+str(lo)+'_lamda='+str(lamda), b)
+    np.save('loss2epo_lamda='+str(lamda), result)

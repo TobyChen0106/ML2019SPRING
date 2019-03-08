@@ -1,7 +1,8 @@
 import numpy as np
 import math
-import sys
 import csv
+import matplotlib.pyplot as plt
+
 
 def preprocess(A):
     month = A
@@ -29,20 +30,17 @@ def preprocess(A):
     return month
 
 if __name__ == "__main__":
-    input_file = sys.argv[1]
-    output_file = sys.argv[2]
-
-    all_data = np.genfromtxt(input_file, delimiter=',', encoding="big5")
+    all_data = np.genfromtxt('test.csv', delimiter=',', encoding="big5")
     all_data = all_data[:, 2:]
     x = preprocess(all_data)
     # print(x.shape)
-    w = np.load('w_0.1_100000_471_l=29.26486090077791.npy')
-    b = np.load('b_0.1_100000_471_l=29.26486090077791.npy')
-    with open(output_file, 'w', newline='') as csvfile:
+    w = np.load('w_0.1_100000_471_l=30.903619611422904.npy')
+    b = np.load('b_0.1_100000_471_l=30.903619611422904.npy')
+    with open('result.csv', 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(['id', 'value'])
         for id in range(x.shape[0]//18):     
-            y = (w * x[id*18:id*18+18, 0:9]).sum() + b
+            y = (w * x[id*18:id*18+18, 4:9]).sum() + b
             writer.writerow(['id_' + str(id), y[0]])
             # writer.writerow(x[id])
             # print(y)
