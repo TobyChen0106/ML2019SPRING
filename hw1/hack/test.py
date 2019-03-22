@@ -34,14 +34,14 @@ if __name__ == "__main__":
     all_data = all_data[:, 2:]
     x = preprocess(all_data)
     # print(x.shape)
-    w = np.load('w_0.1_100000_471_l=30.903619611422904.npy')
-    b = np.load('b_0.1_100000_471_l=30.903619611422904.npy')
+    w = np.load('w_1e-05_100000_960.npy')
+    b = np.load('w_1e-05_100000_960.npy')
     with open('result.csv', 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(['id', 'value'])
         for id in range(x.shape[0]//18):     
             y = (w * x[id*18:id*18+18, 4:9]).sum() + b
-            writer.writerow(['id_' + str(id), y[0]])
+            writer.writerow(['id_' + str(id), y[0,0]])
             # writer.writerow(x[id])
             # print(y)
     # print(all_data[10][0])

@@ -5,13 +5,17 @@ from decimal import Decimal
 def preprocess(A):
     augmented_weight = 4
     new_x = np.empty((A.shape[0], A.shape[1] + (augmented_weight - 1) * 5))
-    
+    new_sum = A.sum(axis=0, keepdims=True)
+    new_avr = new_sum/A.shape[0]
+    A = (A-new_avr)/np.var(A, axis=0)
+
+    # print(A[:, 2])
     A[:,[2,5]] = A[:, [5,2]]
     
     for i in range(5):
         for j in range(augmented_weight):
             new_x[:, i*augmented_weight + j] = np.power(A[:, i], j + 1)
-    new_x[:, 5*augmented_weight:] = A[:, 5:]
+    new_x[:, 5 * augmented_weight:] = A[:, 5:]
     # new_x[:, augmented_weight*5] = A[:,2]
     # print (new_x[0])            
 
@@ -82,7 +86,7 @@ def gradient_decent(x, y):
 if __name__ == "__main__":
     lr = 0.001
     epoch = 100000
-    batch = 50
+    batch = 5
     
     x_train = np.array(np.genfromtxt('X_train', delimiter=',')[1:])
     y_train = np.array(np.genfromtxt('Y_train', delimiter=',')[1:])

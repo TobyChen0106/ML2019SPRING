@@ -4,6 +4,7 @@ import csv
 from keras import optimizers
 from keras.models import Sequential
 from keras.layers import Dense, Activation, BatchNormalization
+from keras.callbacks import ModelCheckpoint
 
 def preprocess(A):
     augmented_weight = 1
@@ -29,19 +30,20 @@ if __name__ == "__main__":
     model = Sequential()
     model.add(Dense(1000, input_dim=x_train.shape[1], activation='relu'))
     model.add(Dense(1000, activation='relu'))
-    model.add(Dense(1000, activation='relu'))
     model.add(Dense(1))
     model.add(BatchNormalization())
     model.add(Activation('sigmoid'))
 
     adam = optimizers.Adam(lr=5e-4)
+    checkpoint = ModelCheckpoint('best_29.h5', monitor = 'val_loss', verbose = 1, save_best_only = True, mode = 'min')
     model.compile(loss='binary_crossentropy', optimizer=adam, metrics=['accuracy'])
 
-    model.fit(x_train, y_train, epochs=500, batch_size=50)
+    model.fit(x_train, y_train, epochs=500, batch_size=50, shuffle = True, validation_split = 0.2)
 
     scores = model.evaluate(x_train, y_train)
     print("\n%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
-
+    
+    
     # try:
     #     gradient_decent(x_train, y_train)
     # except (KeyboardInterrupt):

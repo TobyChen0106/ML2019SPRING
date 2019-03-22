@@ -1,9 +1,12 @@
 import numpy as np
 import math
 import csv
-from decimal import Decimal
+from keras import optimizers
+from keras.models import Sequential
+from keras.layers import Dense, Activation, BatchNormalization
+
 def preprocess(A):
-    augmented_weight = 4
+    augmented_weight = 1
     new_x = np.empty((A.shape[0], A.shape[1] + (augmented_weight - 1) * 5))
     
     A[:,[2,5]] = A[:, [5,2]]
@@ -16,25 +19,41 @@ def preprocess(A):
     # print (new_x[0])            
 
     return new_x
-    
+
 if __name__ == "__main__":
-    
+
     x_test = np.genfromtxt('X_test', delimiter=',')[1:]
     x_test = preprocess(x_test)
+    x_test = preprocess(x_test)
+    
+    model = Sequential()
+    model.add(Dense(1000, input_dim=x_train.shape[1], activation='relu'))
+    model.add(Dense(500, activation='relu'))
+    model.add(Dense(1))
+    model.add(BatchNormalization())
+    model.add(Activation('sigmoid'))
 
-    w = np.load('w.npy') 
-    b = np.load('b.npy') 
-    z = (w * x_test).sum(axis = 1) + b
-    # z = z*0.00001
-    result = 1.0 / (1.0 + np.exp(-z))
+    adam = optimizers.Adam(lr=5e-4)
+    model.checkpoint = ModelCheckpoint('best_29.h5', monitor = 'val_loss', verbose = 1, save_best_only = True, mode = 'min')
+    model.compile(loss='binary_crossentropy', optimizer=adam, metrics=['accuracy'])
 
+    model.fit(x_train, y_train, epochs=500, batch_size=50, shuffle = True, validation_split = 0.2)
 
-    output_file = "result.csv"
-    with open(output_file, 'w', newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow(['id', 'label'])
-        for i in range(result.shape[0]):
-            if ( result[i] > 0.5 ): 
-                writer.writerow([i+1, 1])
-            else:
-                writer.writerow([i+1, 0])
+    scores = model.evaluate(x_train, y_train)
+    print("\n%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
+    
+    
+    # try:
+    #     gradient_decent(x_train, y_train)
+    # except (KeyboardInterrupt):
+    #     np.save('result/w_'+str(lr)+'_'+str(epoch)+'_'+str(batch)+'_l='+str(loss), w)
+    #     np.save('result/b_'+str(lr)+'_'+str(epoch)+'_'+str(batch)+'_l='+str(loss), b)
+    #     np.save('w',w)
+    #     np.save('b',b)
+    #     np.save('w_v',w_var)
+    #     np.save('b_v',b_var)
+
+    # np.save('w_'+str(lr)+'_'+str(epoch)+'_'+str(batch)+'_l='+str(loss), w)
+    # np.save('b_'+str(lr)+'_'+str(epoch)+'_'+str(batch)+'_l='+str(loss), b)
+    # np.save('w',w)
+    # np.save('b',b)
