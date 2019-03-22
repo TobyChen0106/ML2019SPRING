@@ -84,8 +84,8 @@ def gradient_decent(x, y):
     # return w, b, loss/n
 
 if __name__ == "__main__":
-    lr = 0.01
-    epoch = 10000
+    lr = 0.001
+    epoch = 100000
     batch = 5
     
     x_train = np.array(np.genfromtxt('X_train', delimiter=',')[1:])
