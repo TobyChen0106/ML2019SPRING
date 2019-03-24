@@ -3,15 +3,21 @@ import math
 import csv
 from decimal import Decimal
 def preprocess(A):
-    augmented_weight = 4
+    augmented_weight = 3
+    A[:, [2, 5]] = A[:, [5, 2]]
+    
     new_x = np.empty((A.shape[0], A.shape[1] + (augmented_weight - 1) * 5))
     
-    A[:,[2,5]] = A[:, [5,2]]
+    new_sum = A[:,:5].sum(axis=0, keepdims=True)
+    new_avr = new_sum/A.shape[0]
+    A[:,:5] = (A[:,:5]-new_avr)/np.var(A[:,:5], axis=0)
+
+    # print(A[:, 2])
     
     for i in range(5):
         for j in range(augmented_weight):
             new_x[:, i*augmented_weight + j] = np.power(A[:, i], j + 1)
-    new_x[:, 5*augmented_weight:] = A[:, 5:]
+    new_x[:, 5 * augmented_weight:] = A[:, 5:]
     # new_x[:, augmented_weight*5] = A[:,2]
     # print (new_x[0])            
 

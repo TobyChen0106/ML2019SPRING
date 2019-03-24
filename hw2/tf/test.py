@@ -37,9 +37,7 @@ if __name__ == "__main__":
     model.checkpoint = ModelCheckpoint('best_29.h5', monitor = 'val_loss', verbose = 1, save_best_only = True, mode = 'min')
     model.compile(loss='binary_crossentropy', optimizer=adam, metrics=['accuracy'])
 
-    model.fit(x_train, y_train, epochs=500, batch_size=50, shuffle = True, validation_split = 0.2)
-
-    scores = model.evaluate(x_train, y_train)
+    
     print("\n%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
     
     

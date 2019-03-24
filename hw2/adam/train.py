@@ -3,15 +3,21 @@ import math
 import csv
 from decimal import Decimal
 def preprocess(A):
-    augmented_weight = 2
+    augmented_weight = 3
+    A[:, [2, 5]] = A[:, [5, 2]]
+    
     new_x = np.empty((A.shape[0], A.shape[1] + (augmented_weight - 1) * 5))
     
-    A[:,[2,5]] = A[:, [5,2]]
+    new_sum = A[:,:5].sum(axis=0, keepdims=True)
+    new_avr = new_sum/A.shape[0]
+    A[:,:5] = (A[:,:5]-new_avr)/np.var(A[:,:5], axis=0)
+
+    # print(A[:, 2])
     
     for i in range(5):
         for j in range(augmented_weight):
             new_x[:, i*augmented_weight + j] = np.power(A[:, i], j + 1)
-    new_x[:, 5*augmented_weight:] = A[:, 5:]
+    new_x[:, 5 * augmented_weight:] = A[:, 5:]
     # new_x[:, augmented_weight*5] = A[:,2]
     # print (new_x[0])            
 
@@ -48,20 +54,15 @@ def gradient_decent(x, y):
         b_b1 = 0.9
         b_b2 = 0.9
 
-        batch_s = 0
-        if batch_s + batch < n:
-            batch_e = batch_s + batch-1
-        else:
-            batch_e = n - 1
-        while (batch_s < n):
-            z = (w * x[batch_s:batch_e + 1]).sum(axis = 1) + b
+        for ba in range(n // batch):
+            z = (w * x[ba*batch:ba*batch+batch]).sum(axis = 1) + b
             # z = z*0.00001
             result = 1.0 / (1.0 + np.exp(-z))
 
-            loss -= ( y[batch_s:batch_e + 1] * np.log(result+sss) + (1-y[batch_s:batch_e + 1]) * np.log(1-result+sss)).sum()
+            loss -= ( y[ba*batch:ba*batch+batch] * np.log(result+sss) + (1-y[ba*batch:ba*batch+batch]) * np.log(1-result+sss)).sum()
             
-            w_gradient = (np.expand_dims(y[batch_s:batch_e + 1]-result, axis = 1)*x[batch_s:batch_e + 1]).sum(axis=0)
-            b_gradient = (y[batch_s:batch_e + 1]-result).sum()
+            w_gradient = (np.expand_dims(y[ba*batch:ba*batch+batch]-result, axis = 1)*x[ba*batch:ba*batch+batch]).sum(axis=0)
+            b_gradient = (y[ba*batch:ba*batch+batch]-result).sum()
             
             w_var += (w_gradient ** 2)
             b_var += (b_gradient ** 2)
@@ -82,19 +83,14 @@ def gradient_decent(x, y):
 
             # w += lr * w_gradient / (w_var ** 0.5+sss)
             # b += lr * b_gradient / (b_var ** 0.5+sss)
-            
-            batch_s = batch_e + 1
-            if batch_e + batch < n:
-                batch_e = batch_e + batch
-            else:
-                batch_e = n - 1
+    
         loss = loss/n
         print("[epoch] ", epo+1, "       [loss] ", loss)
     # return w, b, loss/n
 
 if __name__ == "__main__":
-    lr = 100
-    epoch = 100000
+    lr = 0.0001
+    epoch = 10000
     batch = 50
 
     x_train = np.array(np.genfromtxt('X_train', delimiter=',')[1:])
