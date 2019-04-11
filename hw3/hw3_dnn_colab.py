@@ -243,15 +243,13 @@ class DNN_Classifier(nn.Module):
             nn.Linear(1024, 1024),
             nn.LeakyReLU(0.2),
             nn.Dropout(p=0.5),
-            nn.Linear(1024, 1024),
-            nn.LeakyReLU(0.2),
-            nn.Dropout(p=0.5),
             nn.Linear(1024, 7)
         )
 
         self.fc.apply(gaussian_weights_init)
 
     def forward(self, x):
+        x = x.view(-1, 48*48)
         return self.fc(x)
 
 
@@ -278,7 +276,7 @@ def main():
     val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False, num_workers=8)
 
 #########GPU#########
-    model = Classifier().cuda()
+    model = DNN_Classifier().cuda()
     # model = Classifier()
     train_loss_log = []
     train_acc_log = []
