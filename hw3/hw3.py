@@ -1,5 +1,5 @@
 from __future__ import print_function
-import argparse
+# import argparse
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -8,7 +8,7 @@ from torchvision import datasets, transforms
 from torch.utils.data import Dataset
 from torch.utils.data import TensorDataset, DataLoader
 import sys
-import csv
+# import csv
 import time
 import numpy as np
 import pandas as pd
@@ -261,10 +261,13 @@ def main():
     
     # x_train, x_label, val_data, val_label = readfile("train_data.npy", "label.npy", val_num = 0.2)
     # x_train, x_label, val_data, val_label = readfile_from_np("/content/drive/My Drive/ML2019/hw3_torch/train_data.npy", "/content/drive/My Drive/ML2019/hw3_torch/label.npy", val_num = 0.2, augmentation = 1)
-    x_train, x_label, val_data, val_label = readfile_from_csv("/content/drive/My Drive/ML2019/hw3_torch/train.csv", val_num = 0.2)
+ 
+    # x_train, x_label, val_data, val_label = readfile_from_csv("/content/drive/My Drive/ML2019/hw3_torch/train.csv", val_num = 0.2)
+    x_train, x_label, val_data, val_label = readfile_from_csv(sys.argv[1], val_num = 0.2)
+    
     # x_train, x_label, val_data, val_label = readfile_from_np("train_data.npy", "label.npy", val_num = 0.2, augmentation = 5)
     
-    train_set = MyDataset(x_train, x_label, augmentation = 1)     
+    train_set = MyDataset(x_train, x_label, augmentation = 8)     
     val_set = TensorDataset(val_data, val_label)
     
     num_epoch = 50
@@ -351,23 +354,31 @@ def main():
         train_acc_log.append(train_acc)
         val_loss_log.append(val_loss/val_batch_num)
         val_acc_log.append(val_acc)
-
+'''
         if (val_acc > best_acc):
             with open('/content/drive/My Drive/ML2019/hw3_torch/save/acc.txt','w') as f:
                 f.write('-BEST MODEL -\nepoch: ' + str(epoch)+'/'+str(num_epoch)+'\t'+'val_acc: '+str(val_acc)+'\n')
             torch.save(model.state_dict(), '/content/drive/My Drive/ML2019/hw3_torch/save/L_best_model.pth')
             best_acc = val_acc
-            print ('** Best Model Updated! ***\n')
+            print('** Best Model Updated! ***\n')
+'''     
+        if (val_acc > best_acc):
+            with open('save/acc.txt','w') as f:
+                f.write('-BEST MODEL -\nepoch: ' + str(epoch)+'/'+str(num_epoch)+'\t'+'val_acc: '+str(val_acc)+'\n')
+            torch.save(model.state_dict(), 'save/L_best_model.pth')
+            best_acc = val_acc
+            print('** Best Model Updated! ***\n')
+
         # if (val_acc > 0.67):
         #     path = '/content/drive/My Drive/ML2019/hw3_torch/save/models/L_%1.4f_model.pth'%(val_acc)
         #     torch.save(model.state_dict(), path)
         #     print ('**  Model Saved! ***\n')
     
-    path = '/content/drive/My Drive/ML2019/hw3_torch/save/'
-    np.save(path+'train_loss_log', train_loss_log)
-    np.save(path+'train_acc_log', train_acc_log)
-    np.save(path+'val_loss_log', val_loss_log)
-    np.save(path+'val_acc_log', val_acc_log)
+    # path = '/content/drive/My Drive/ML2019/hw3_torch/save/'
+    # np.save(path+'train_loss_log', train_loss_log)
+    # np.save(path+'train_acc_log', train_acc_log)
+    # np.save(path+'val_loss_log', val_loss_log)
+    # np.save(path+'val_acc_log', val_acc_log)
 
 
     # dataset = MyDataset("train_data.npy", "test.npy")
