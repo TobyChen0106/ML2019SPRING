@@ -41,7 +41,17 @@ def readfile_from_np(test_file_path):
     for i in range(len(test_data)):
         test_data[i] = data_transformations(test_data[i])
     return test_data
+
+def readfile_from_csv(test_file_path):
+    print("Reading csv File...")
+   
+    data = io.StringIO(open(test_file_path).read().replace(',',' '))
+    test_data = np.genfromtxt(data, delimiter=' ',  skip_header=1)[:, 1:]
     
+    for i in range(len(test_data)):
+            test_data[i] = data_transformations(test_data[i])
+    return test_data
+
 def gaussian_weights_init(m):
     classname = m.__class__.__name__
     if classname.find('Conv') != -1 and classname.find('Conv') == 0:
@@ -162,7 +172,8 @@ def main():
             print(msg, flush = True)
             # back = '\b'*len(msg)
             
-            test_data = readfile_from_np("/content/drive/My Drive/ML2019/hw3_torch/test.npy")
+            # test_data = readfile_from_np("/content/drive/My Drive/ML2019/hw3_torch/test.npy")
+            test_data = readfile_from_csv("/content/drive/My Drive/ML2019/hw3_torch/test.npy")
             # test_data = readfile_from_np("test.npy")
 
             test_set = TensorDataset(test_data)     
