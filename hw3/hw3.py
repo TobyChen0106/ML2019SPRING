@@ -363,9 +363,9 @@ def main():
             print('** Best Model Updated! ***\n')
 '''     
         if (val_acc > best_acc):
-            with open('save/acc.txt','w') as f:
-                f.write('-BEST MODEL -\nepoch: ' + str(epoch)+'/'+str(num_epoch)+'\t'+'val_acc: '+str(val_acc)+'\n')
-            torch.save(model.state_dict(), 'save/L_best_model.pth')
+            # with open('models/acc.txt','w') as f:
+            #     f.write('-BEST MODEL -\nepoch: ' + str(epoch)+'/'+str(num_epoch)+'\t'+'val_acc: '+str(val_acc)+'\n')
+            torch.save(model.state_dict(), 'models/L_best_model.pth')
             best_acc = val_acc
             print('** Best Model Updated! ***\n')
 
