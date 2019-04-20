@@ -18,6 +18,7 @@ import pandas as pd
 from PIL import Image
 import scipy.misc
 import gc
+import imageio
 
 mean=[0.485, 0.456, 0.406]
 std = [0.229, 0.224, 0.225]
@@ -85,55 +86,50 @@ def load_data(train_path, label_path):
     for i in range(200):
         file_name = train_path+'/%03d.png'%(i)
         img = Image.open(file_name)
-        
         img = preprocess(img)
-    
         img = np.array(img)
         train_data.append(img)
 
-    train_data = np.array(train_data,dtype = 'int32')
-    # np.save('train_data_raw_int32',train_data)
-    train_data = torch.FloatTensor(train_data)
+    train_data = np.array(train_data, dtype = 'int32')
+
+#     train_data = torch.FloatTensor(train_data)
     train_data.requires_grad = True
     label = torch.LongTensor(label)
 
-    return Variable(train_data, requires_grad=True), label
+    return train_data, label
   
 def load_data_from_np(train_path, label_path):
     label = np.genfromtxt(label_path, delimiter=",")
 
     train_data = np.load(train_path)
 
-    train_data = torch.FloatTensor(train_data)
-    train_data.requires_grad = True
+#     train_data = torch.FloatTensor(train_data)
+#     train_data.requires_grad = True
     label = torch.LongTensor(label)
 
     return train_data, label
 def main():
 
-    model = models.resnet50(pretrained=True)
+    model = models.resnet50(pretrained=True).cuda()
     model.eval()
-
     
-    print(preprocess(Image.fromarray(np.uint8(np.array([[[1,1,1]]])))))
-    # images, labels = load_data_from_np('/content/drive/My Drive/ML2019/hw5/images.npy', '/content/drive/My Drive/ML2019/hw5/hw5_data/my_labels.csv')
-    images, labels = load_data('hw5_data/images/', 'hw5_data/my_labels.csv')
-    origin_images = images
+    origin_images, labels = load_data_from_np('/content/drive/My Drive/ML2019/hw5/train_data_raw_int32.npy', '/content/drive/My Drive/ML2019/hw5/hw5_data/my_labels.csv')
+#     print(images[0])
+    images = np.array(origin_images, dtype = 'int32')
 #     images = Variable(images, requires_grad=True)
 
     limits = np.zeros((200))
     for l in limits:
         l = 0.01
     
-
-    num_epoch = 0
-    batch_size = 10
-    lr = 0.01
-    limit = 0.001
-    grad_var = torch.FloatTensor(np.ones((batch_size, 3, 224, 224))/10e8)
+    num_epoch = 50
+    batch_size = 40
+    lr = 100
+    limit = 3
+    grad_var = (np.ones((batch_size, 224, 224, 3))/10e8)
     
-    train_set = TensorDataset(images, labels)     
-    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=False, num_workers=8)
+#     train_set = TensorDataset(images, labels)     
+#     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=False, num_workers=8)
     
     loss = torch.nn.CrossEntropyLoss()
     start_time = time.time()
@@ -149,30 +145,46 @@ def main():
 #             print(msg, end='', flush=True)
 #             back = '\b' * len(msg)
 #             print(back, end='', flush=True)
-#             batch_images = Variable(images[i*batch_size:i*batch_size+batch_size], requires_grad = True)
-            batch_images = images.data[i*batch_size:i*batch_size+batch_size]
+#             batch_images = 
+            _batch_images = np.array(images[i*batch_size:i*batch_size+batch_size])
+            batch_images = []
+            for ba in range(batch_size):
+#                 print(_batch_images[ba].shape)
+                batch_images.append( preprocess(Image.fromarray(_batch_images[ba].astype('uint8'), mode = "RGB")).numpy())
+#                 print(batch_images_2.shape)
+            batch_images = np.array(batch_images)
+            batch_images = torch.FloatTensor(batch_images)
+            batch_images = Variable(batch_images, requires_grad = True)
+#             batch_images = images.data[i*batch_size:i*batch_size+batch_size]
 #             batch_images.is_leaf=True
 #             batch_images.requires_grad=True
     
 #             print(batch_images.shape)
-            train_pred = model(batch_images)
+            train_pred = model(batch_images.cuda())
 #             print(np.argmax(train_pred.cpu().data.numpy()))
             train_acc += np.sum(np.argmax(train_pred.cpu().data.numpy(), axis=1) == labels[i*batch_size:i*batch_size+batch_size].numpy())
 
-            batch_loss = loss(train_pred, labels[i*batch_size:i*batch_size+batch_size])
+            batch_loss = loss(train_pred, labels[i*batch_size:i*batch_size+batch_size].cuda())
             batch_loss.backward(retain_graph=True)
             # print(batch_loss.requires_grad)
             # print(batch_loss.is_leaf)
-            x_grad = batch_images.grad.data  
+            x_grad = np.transpose(batch_images.grad.data.numpy(),(0,2,3,1))  
+#             print(x_grad.shape)
             grad_var += x_grad*x_grad
-            update_value = batch_images + lr*x_grad/grad_var - origin_images[i*batch_size:i*batch_size+batch_size]
+            update_value = _batch_images + lr*x_grad/grad_var - origin_images[i*batch_size:i*batch_size+batch_size]
             
             # print(update_value.shape)
-            for up in range(batch_size):
+#             for up in range(batch_size):
             #     update_value[up] = torch.clamp(update_value[up], min=-1*limits[i*batch_size+up], max=limits[i*batch_size+up])           
-                update_value[up] = torch.clamp(update_value[up], min=-1*limit, max=limit)           
+            update_value = np.clip(update_value, -1*limit, limit)
+#             print('update:',update_value.max())
             # print(update_value)
-            images[i*batch_size:i*batch_size+batch_size] += update_value
+#             print(update_value.detach().numpy().max())
+            
+            images[i*batch_size:i*batch_size+batch_size] = np.round(update_value) + origin_images[i*batch_size:i*batch_size+batch_size]
+            images[i*batch_size:i*batch_size+batch_size] = np.clip(images[i*batch_size:i*batch_size+batch_size], 0, 255)
+#             print('image:',(images[i*batch_size:i*batch_size+batch_size]-origin_images[i*batch_size:i*batch_size+batch_size]).max())
+#             print('origin image:', origin_images[0][0][0])
             gc.collect()
             
         train_acc = train_acc/len(images)
@@ -182,13 +194,19 @@ def main():
         print(msg, flush=True)
         # back = '\b' * len(msg)
         # print(back, end='', flush=True)
-    
+#         print('max L: ',np.absolute(images-origin_images).max())
+#         print('image_max; ', images.max(),'image_min; ', images.min())
+#         print(origin_images.dtype)
+#         print(images.dtype)
     print('Train done! Now saving...')
     for i in range(len(images)):
-        x_adv = images[i].squeeze(0)
-        x_adv = x_adv.mul(torch.FloatTensor(std).view(3, 1, 1)).add(torch.FloatTensor(mean).view(3, 1, 1)).detach().numpy()
-        x_adv = np.transpose(x_adv, (1, 2, 0))
-        scipy.misc.imsave('/content/drive/My Drive/ML2019/hw5/output/%03d' % (i) + '.png', x_adv)
+#         x_adv = images[i].squeeze(0)
+        x_adv = images[i]
+#         x_adv = x_adv.mul(torch.FloatTensor(std).view(3, 1, 1)).add(torch.FloatTensor(mean).view(3, 1, 1)).detach().numpy()
+#         x_adv = np.transpose(x_adv, (1, 2, 0))
+#         x_adv = scipy.misc.toimage(x_adv, cmin=0, cmax=255)
+#         x_adv = Image.fromarray(x_adv.astype('uint8'), mode = 'RGB')
+        imageio.imwrite('/content/drive/My Drive/ML2019/hw5/output/%03d' % (i) + '.png', x_adv.astype('uint8'))
         
     print('Save done!')
 if __name__ == '__main__':
