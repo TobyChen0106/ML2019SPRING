@@ -28,5 +28,7 @@ A = np.ones((1, 2, 3), dtype = 'int32')
 B = np.ones((1, 2, 3), dtype = 'float')
 
 C = A+B
-print(C)
-print(C.dtype)
+
+
+l = np.load('2_labels.npy')
+print(l[121])

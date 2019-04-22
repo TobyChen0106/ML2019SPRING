@@ -4,6 +4,7 @@ output (19)/
 output (20)/
 output (22)/
 output (24)/
+
 images.npy
 hw5_data/
 train_data_raw_int32.npy
