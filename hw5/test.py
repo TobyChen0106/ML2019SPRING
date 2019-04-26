@@ -1,5 +1,6 @@
 import numpy as np
-
+import os
+# import numpy as np
 
 a = np.array([
     [[[0,0,0],
@@ -30,5 +31,8 @@ B = np.ones((1, 2, 3), dtype = 'float')
 C = A+B
 
 
-l = np.load('2_labels.npy')
-print(l[121])
+# l = np.load('train_data_raw_int32.npy')
+# print(l[0])
+
+seq1 = ['hello','good','boy','doiido']
+print (os.path.join('hello','123'))

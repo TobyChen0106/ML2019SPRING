@@ -17,6 +17,7 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 import scipy.misc
+import matplotlib.pyplot as plt
 
 mean=[0.485, 0.456, 0.406]
 std = [0.229, 0.224, 0.225]
@@ -83,7 +84,37 @@ def main():
                     label_ids[-2], data_labels[int(label_ids[-2])], output_probs[0,label_ids[-2]]*100, \
                     label_ids[-3], data_labels[int(label_ids[-3])], output_probs[0,label_ids[-3]]*100)
         print(msg)
-    
+
+        # bar(x, height, width=0.8, bottom=None, *, align='center', data=None, **kwargs)
+        fig, ax = plt.subplots()
+
+        index = np.arange(3)
+        bar_width = 0.35
+
+        opacity = 0.4
+        error_config = {'ecolor': '0.3'}
+        
+        fig_y = [   output_probs[0,label_ids[-1]].detach().numpy()*100, \
+                    output_probs[0,label_ids[-2]].detach().numpy()*100,\
+                    output_probs[0,label_ids[-3]].detach().numpy()*100]  
+        rects1 = ax.bar(index, fig_y, bar_width,
+                        alpha=opacity, color='b',
+                        error_kw=error_config,
+                        label='Probability')
+
+        ax.set_ylabel('Probability')
+        ax.set_title('%s: %2.2f%%'%(data_labels[int(label_ids[-1])], \
+                                    output_probs[0,label_ids[-1]]*100), y=-0.2)
+        ax.set_xticks(index)
+        ax.set_xticklabels((    data_labels[int(label_ids[-1])], \
+                                data_labels[int(label_ids[-2])], \
+                                data_labels[int(label_ids[-3])]))
+        for i, v in enumerate(fig_y):
+            ax.text(i -0.12, v + 1 , str(np.round(v,2)), color='blue', fontweight='bold')
+        
+        fig.tight_layout()
+        plt.show()
+
 if __name__ == '__main__':
     main()
 

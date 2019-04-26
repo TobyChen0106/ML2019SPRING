@@ -11,6 +11,7 @@ import torchvision.models as models
 from torch.autograd import Variable
 import requests, io
 import sys
+import os
 import csv
 import time
 import numpy as np
@@ -27,24 +28,47 @@ preprocess = transforms.Compose([
                     transforms.ToTensor(),
                     transforms.Normalize(mean, std)
                 ])  
+def load_data(train_path, label_path):
+    global input_dir
+    global output_dir
+    label = np.genfromtxt(label_path, delimiter=",", skip_header = 1, usecols = 3)
+    
+    train_data = []
+
+    for i in range(200):
+        file_name = os.path.join(input_dir, '%03d.png'%(i))
+        img = Image.open(file_name)
+        img = np.array(img)
+        train_data.append(img)
+    
+    #train_data = np.transpose(np.array(train_data, dtype = 'int32'), (0, 2, 3, 1))
+    train_data = np.array(train_data, dtype = 'int32')
+    label = torch.LongTensor(label)
+
+    return train_data, label
+  
 def load_data_from_np(train_path, label_path):
     label = np.genfromtxt(label_path, delimiter=",")
 
     train_data = np.load(train_path)
-
+    print(train_data[0])
 #     train_data = torch.FloatTensor(train_data)
 #     train_data.requires_grad = True
     label = torch.LongTensor(label)
 
     return train_data, label
 def main():
+    global input_dir
+    global output_dir
 
     model = models.resnet50(pretrained=True).cuda()
     model.eval()
     
-    origin_images, labels = load_data_from_np('/content/drive/My Drive/ML2019/hw5/train_data_raw_int32.npy', '/content/drive/My Drive/ML2019/hw5/hw5_data/my_labels.csv')
+    origin_images, labels = load_data(input_dir, 'labels.csv')
+    #origin_images, labels = load_data_from_np('/content/drive/My Drive/ML2019/hw5/train_data_raw_int32.npy', '/content/drive/My Drive/ML2019/hw5/hw5_data/my_labels.csv')
     images = np.array(origin_images, dtype = 'float')
-    s_labels = np.load('/content/drive/My Drive/ML2019/hw5/2_labels.npy')
+    # s_labels = np.load('/content/drive/My Drive/ML2019/hw5/2_labels.npy')
+    s_labels = np.load('2_labels.npy')
     s_labels = torch.LongTensor(s_labels)
     
     num_L_size = 2
@@ -82,15 +106,17 @@ def main():
 
                 batch_loss = loss(train_pred, labels[i*batch_size:i*batch_size+batch_size].cuda())-loss(train_pred, s_labels[i*batch_size:i*batch_size+batch_size].cuda())
                 batch_loss.backward(retain_graph=True)
+                
                 x_grad = np.transpose(batch_images.grad.data.numpy(),(0,2,3,1))  
+                #x_grad = batch_images.grad.data.numpy()
+                #print(x_grad.shape)
+                
                 grad_var += x_grad*x_grad
                 update_value = _batch_images + lr*x_grad/grad_var - origin_images[i*batch_size:i*batch_size+batch_size]
 
                 for up in range(batch_size):
                   update_value[up] =  np.clip(update_value[up], -1*limits[i*batch_size+up], limits[i*batch_size+up])
-    #             update_value = np.clip(update_value, -1*limit, limit)
 
-    #             images[i*batch_size:i*batch_size+batch_size] = np.round(update_value) + origin_images[i*batch_size:i*batch_size+batch_size]
                 images[i*batch_size:i*batch_size+batch_size] = (update_value) + origin_images[i*batch_size:i*batch_size+batch_size]
                 images[i*batch_size:i*batch_size+batch_size] = np.clip(images[i*batch_size:i*batch_size+batch_size], 0, 255)
                 gc.collect()
@@ -98,8 +124,6 @@ def main():
             train_acc = train_acc/len(images)
             acc_rec = np.reshape(np.array(acc_rec), (200))
 
-    #         limits = limits + (acc_rec)*limits*0.3
-    #         lr  = lr*1.3
             indices = (acc_rec == 1).nonzero()[0]
             print('NOT SOLVED: ',indices)
 
@@ -115,8 +139,10 @@ def main():
     print('Train done! Now saving...')
     for i in range(len(images)):
         x_adv = np.array(images[i], dtype = 'uint8')
-        imageio.imwrite('/content/drive/My Drive/ML2019/hw5/output/%03d' % (i) + '.png', x_adv)
+        imageio.imwrite(os.path.join(output_dir, '%03d.png' % (i)), x_adv)
         
     print('Save done!')
 if __name__ == '__main__':
+    input_dir = sys.argv[1]
+    output_dir = sys.argv[2]
     main()

@@ -16,6 +16,7 @@ import time
 import numpy as np
 import pandas as pd
 from PIL import Image
+from PIL import ImageFilter
 import scipy.misc
 
 mean=[0.485, 0.456, 0.406]
@@ -35,6 +36,8 @@ def load_img_raw(idx, dir):
 def load_img_tensor(idx, dir):
     file_name = dir+'%03d'%(idx)+'.png'
     img = Image.open(file_name)
+    # img = Image.open(file_name).filter(ImageFilter.BLUR)
+    # scipy.misc.imsave('output/%03d' % (idx) + '.png', img)
     img = preprocess(img)
     return img
     
@@ -65,7 +68,7 @@ def main():
         img_2 = load_img_raw(i, img_2_dir)
         img_2_tensor =  load_img_tensor(i, img_2_dir)
         dif = np.absolute(img_2-img_1).max()
-        # print('[%00d]: %d' % (i, int(dif)))
+        print('[%00d]: %d' % (i, int(dif)))
         L_sum += dif
         
         image_tensor = img_2_tensor.unsqueeze(0) # add batch dimension.  C X H X W ==> B X C X H X W

@@ -11,6 +11,7 @@ import torchvision.models as models
 from torch.autograd import Variable
 import requests, io
 import sys
+import os
 import csv
 import time
 import numpy as np
@@ -37,15 +38,20 @@ def readfile_from_img(file_path, label_path):
     return img, label
 
 def load_img(idx):
-    file_name = 'hw5_data/images/%03d'%(idx)+'.png'
+    global input_dir
+    global output_dir
+    # file_name = 'hw5_data/images/%03d'%(idx)+'.png'
+    file_name = os.path.join(input_dir,('%03d.png'%(idx)))
     img = Image.open(file_name)
     img = preprocess(img)
     return img
 
 def main():
+    global input_dir
+    global output_dir
     vgg19 = models.resnet50(pretrained=True)
     vgg19.eval()
-    labels = np.genfromtxt('hw5_data/my_labels.csv', delimiter=",")
+    labels = np.genfromtxt('labels.csv', delimiter=",", skip_header = 1, usecols = 3)
     start_time = time.time()
 
     for i in range(200):
@@ -63,35 +69,21 @@ def main():
         img_variable = Variable(image_tensor, requires_grad=True) #convert tensor into a variable
 
         output = vgg19.forward(img_variable)
-
-        # *****predict*****
-        label_idx = torch.max(output.data, 1)[1][0].numpy()   #get an index(class number) of a largest element
+        loss = torch.nn.CrossEntropyLoss()
+        loss_cal = loss(output, torch.LongTensor([labels[i]]))
+        loss_cal.backward(retain_graph=True)
         
-        labels_link = "https://savan77.github.io/blog/files/labels.json"    
-        labels_json = requests.get(labels_link).json()
-        labels = {int(idx):label for idx, label in labels_json.items()}
-        x_pred = labels[int(label_idx)]
-
-        output_probs = F.softmax(output, dim=1)
-        x_pred_prob =  round((torch.max(output_probs.data, 1)[0][0]).numpy() * 100,4)
-        print(label_idx,' ',x_pred, ' ',  x_pred_prob ,'%')
+        eps = 0.097
+        x_grad = torch.sign(img_variable.grad.data)                #calculate the sign of gradient of the loss func (with respect to input X) (adv)
+        x_adv = img_variable.data + eps * x_grad
         
-        # y_true = labels[i]   
-        # target = Variable(torch.LongTensor([y_true]), requires_grad=False)
-
-        # loss = torch.nn.CrossEntropyLoss()
-        # loss_cal = loss(output, target)
-        # loss_cal.backward(retain_graph=True)
-        
-        # eps = 0.085
-        # x_grad = torch.sign(img_variable.grad.data)                #calculate the sign of gradient of the loss func (with respect to input X) (adv)
-        # x_adv = img_variable.data + eps * x_grad
-        
-        # x_adv = x_adv.squeeze(0)
-        # x_adv = x_adv.mul(torch.FloatTensor(std).view(3, 1, 1)).add(torch.FloatTensor(mean).view(3, 1, 1)).numpy()
-        # x_adv = np.transpose(x_adv, (1, 2, 0))
-        # scipy.misc.imsave('output/%03d' % (i) + '.png', x_adv)
+        x_adv = x_adv.squeeze(0)
+        x_adv = x_adv.mul(torch.FloatTensor(std).view(3, 1, 1)).add(torch.FloatTensor(mean).view(3, 1, 1)).numpy()
+        x_adv = np.transpose(x_adv, (1, 2, 0))
+        scipy.misc.imsave(os.path.join(output_dir,'%03d.png' % (i)), x_adv)
         
     print('\n done!')
 if __name__ == '__main__':
+    input_dir = sys.argv[1]
+    output_dir = sys.argv[2]
     main()
