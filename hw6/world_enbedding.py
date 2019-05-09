@@ -16,14 +16,14 @@ def cut_raw(train_file, test_file):
     train_x = read_raw(train_file)
     output = []
     for in_seq in train_x:
-        out_seq = list(jieba.cut(in_seq, cut_all=False, HMM=True))
+        out_seq = list(jieba.cut(in_seq, cut_all=False, HMM=False))
         # while ' ' in  out_seq:
         #     out_seq.remove(' ')
         output.append(out_seq)
     
     test_x = read_raw(test_file)
-    for in_seq in test_x:
-        out_seq = list(jieba.cut(in_seq, cut_all=False, HMM=True))
+    for test_in_seq in test_x:
+        out_seq = list(jieba.cut(test_in_seq, cut_all=False, HMM=False))
         # while ' ' in  out_seq:
         #     out_seq.remove(' ')
         output.append(out_seq)
@@ -71,9 +71,9 @@ def test_dict(model_path):
 def main():
 
     out_cut = cut_raw('hw6_data/train_x.csv', 'hw6_data/test_x.csv')
-    model = Word2Vec(out_cut, size=100, window=10, min_count=1, workers=4)
-    model.save("word2vec.model")
-    model.wv.save("word2vec.wv")
+    model = Word2Vec(out_cut, size=100, window=5, min_count=1, workers=4)
+    model.save("word2vec_noHMM.model")
+    model.wv.save("word2vec_noHMM.wv")
     test_dict("word2vec.model")
     # my_tset("word2vec.wv")
 
