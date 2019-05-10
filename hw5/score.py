@@ -36,7 +36,7 @@ def load_img_raw(idx, dir):
 def load_img_tensor(idx, dir):
     file_name = dir+'%03d'%(idx)+'.png'
     img = Image.open(file_name)
-    # img = Image.open(file_name).filter(ImageFilter.BLUR)
+    # img = Image.open(file_name).filter(ImageFilter.SMOOTH)
     # scipy.misc.imsave('output/%03d' % (idx) + '.png', img)
     img = preprocess(img)
     return img

@@ -115,7 +115,6 @@ def readfile_from_csv(train_file_path, test_file_path, label__file_path, word2ve
     wv_model = Word2Vec(data_x+test_x, size=vector_size, iter = 10,
                         window=5, min_count=5, workers=4)
 
-    wv_model = 
     data_y = pd.read_csv(label__file_path).values[0:119018, 1]
     gc.collect()
 
@@ -211,13 +210,18 @@ class my_RNN_Net(nn.Module):
 
 
 def main():
+# bash hw6_train.sh <train_x file> <train_y file> <test_x file> <dict.txt.big file>
 
-    weight, train_x, train_y, val_x, val_y = readfile_from_csv('/content/drive/My Drive/ML2019/hw6/hw6_data/train_x.csv',
-                                                               '/content/drive/My Drive/ML2019/hw6/hw6_data/test_x.csv',
-                                                               '/content/drive/My Drive/ML2019/hw6/hw6_data/train_y.csv',
-                                                               '/content/drive/My Drive/ML2019/hw6/word2vec_noHMM.wv',
-                                                               val_num=0.2)
-
+    # weight, train_x, train_y, val_x, val_y = readfile_from_csv(sys.argv[1],
+    #                                                            sys.argv[3],
+    #                                                            sys.argv[2],
+    #                                                            '/content/drive/My Drive/ML2019/hw6/word2vec_noHMM.wv',
+    #                                                            val_num=0.2)
+    weight, train_x, train_y, val_x, val_y = readfile_from_csv(sys.argv[1],
+                                                               sys.argv[3],
+                                                               sys.argv[2],
+                                                               'word2vec_noHMM.wv',
+                                                               val_num=0.2)                                        
     train_set = TensorDataset(train_x, train_y)
     val_set = TensorDataset(val_x, val_y)
 
@@ -299,16 +303,21 @@ def main():
         val_acc_log.append(val_acc)
 
         if(val_acc > best_acc):
-            with open('/content/drive/My Drive/ML2019/hw6/models/acc.txt', 'w') as f:
+            # with open('/content/drive/My Drive/ML2019/hw6/models/acc.txt', 'w') as f:
+            with open('models/acc.txt', 'w') as f:
                 f.write('-BEST MODEL -\nepoch: ' + str(epoch)+'/' +
                         str(num_epoch)+'\t'+'val_acc: '+str(val_acc)+'\n')
+            # torch.save(
+            #     model, '/content/drive/My Drive/ML2019/hw6/models/best_model.pth')
             torch.save(
-                model, '/content/drive/My Drive/ML2019/hw6/models/best_model.pth')
+                model, 'models/best_model.pth')
             best_acc = val_acc
             print('** Best Model Updated! ***\n')
 
+    # torch.save(model,
+    #            '/content/drive/My Drive/ML2019/hw6/models/final_model.pth')
     torch.save(model,
-               '/content/drive/My Drive/ML2019/hw6/models/final_model.pth')
+               'models/final_model.pth')
 
     # log
     train_loss_log = np.array(train_loss_log)
@@ -316,13 +325,13 @@ def main():
     val_loss_log = np.array(val_loss_log)
     val_acc_log = np.array(val_acc_log)
 
-    np.save('/content/drive/My Drive/ML2019/hw6/models/train_loss_log', train_loss_log)
-    np.save('/content/drive/My Drive/ML2019/hw6/models/train_acc_log', train_acc_log)
-    np.save('/content/drive/My Drive/ML2019/hw6/models/val_loss_log', val_loss_log)
-    np.save('/content/drive/My Drive/ML2019/hw6/models/val_acc_log', val_acc_log)
+    # np.save('/content/drive/My Drive/ML2019/hw6/models/train_loss_log', train_loss_log)
+    # np.save('/content/drive/My Drive/ML2019/hw6/models/train_acc_log', train_acc_log)
+    # np.save('/content/drive/My Drive/ML2019/hw6/models/val_loss_log', val_loss_log)
+    # np.save('/content/drive/My Drive/ML2019/hw6/models/val_acc_log', val_acc_log)
 
 if __name__ == '__main__':
     zero_vector = np.zeros(100)
     # jieba.set_dictionary('/content/drive/My Drive/ML2019/hw6/dict.txt.big')
-    jieba.set_dictionary(sys.argv[])
+    jieba.set_dictionary(sys.argv[4])
     main()

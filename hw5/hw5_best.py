@@ -9,7 +9,7 @@ from torch.utils.data import Dataset
 from torch.utils.data import TensorDataset, DataLoader
 import torchvision.models as models
 from torch.autograd import Variable
-import requests, io
+import io
 import sys
 import os
 import csv
@@ -19,7 +19,7 @@ import pandas as pd
 from PIL import Image
 import scipy.misc
 import gc
-import imageio
+# import imageio
 
 mean=[0.485, 0.456, 0.406]
 std = [0.229, 0.224, 0.225]
@@ -139,7 +139,7 @@ def main():
     print('Train done! Now saving...')
     for i in range(len(images)):
         x_adv = np.array(images[i], dtype = 'uint8')
-        imageio.imwrite(os.path.join(output_dir, '%03d.png' % (i)), x_adv)
+        scipy.misc.imsave(os.path.join(output_dir, '%03d.png' % (i)), x_adv)
         
     print('Save done!')
 if __name__ == '__main__':
