@@ -10,8 +10,6 @@ import sys
 import time
 import numpy as np
 import pandas as pd
-from PIL import Image
-import io
 from gensim.test.utils import common_texts, get_tmpfile
 from gensim.models import Word2Vec
 from gensim.models import KeyedVectors
@@ -117,8 +115,7 @@ def readfile_from_csv(train_file_path, test_file_path, label__file_path, word2ve
     wv_model = Word2Vec(data_x+test_x, size=vector_size, iter = 10,
                         window=5, min_count=5, workers=4)
 
-#     data_y = np.genfromtxt(label__file_path, delimiter=',',
-#                            skip_header=1, usecols=1, dtype='int32')
+    wv_model = 
     data_y = pd.read_csv(label__file_path).values[0:119018, 1]
     gc.collect()
 
@@ -326,5 +323,6 @@ def main():
 
 if __name__ == '__main__':
     zero_vector = np.zeros(100)
-    jieba.set_dictionary('/content/drive/My Drive/ML2019/hw6/dict.txt.big')
+    # jieba.set_dictionary('/content/drive/My Drive/ML2019/hw6/dict.txt.big')
+    jieba.set_dictionary(sys.argv[])
     main()
