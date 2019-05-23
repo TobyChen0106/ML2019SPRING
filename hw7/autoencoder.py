@@ -12,115 +12,122 @@ import numpy as np
 from PIL import Image
 import time
 
+data_transformations = transforms.Compose([
+        transforms.ToPILImage(),
+        transforms.RandomResizedCrop(size=32,
+                                    scale=(0.7, 1.0),
+                                    ratio=(0.75, 1.3333333333333333),
+                                    interpolation=2),
+        transforms.RandomHorizontalFlip(p=0.5),
+        transforms.RandomRotation(degrees=30,
+#                                     resample=Image.BILINEAR,
+                                    resample=False,
+                                    expand=False,
+                                    center=None),
+        # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        transforms.ToTensor()
+])
 
+
+class MyDataset(Dataset):
+    def __init__(self, t_data, augmentation = 1):
+        # self.train_data = np.genfromtxt(file_path, dtype=bytes, delimiter=' ')
+        # self.label = np.genfromtxt(file_path, dtype=bytes, delimiter=' ')
+        self.train_data = t_data
+        self.aug_size = augmentation
+  
+        # self.label = pd.read_csv(label_file_path, delimiter=' ', header = -1)
+        # print(self.train_data.shape)
+        # print(self.label.shape)
+    def __len__(self):
+        return len(self.train_data) * self.aug_size
+    
+    def __getitem__(self, idx):
+       	
+        # imread: a function that reads an image from path
+        
+        i  = int(idx/self.aug_size)
+        if (idx % self.aug_size != 0):
+#             _img = Image.fromarray(self.train_data[i])
+            img = data_transformations(self.train_data[i])
+            # img = np.array(new_img)
+#             img = self.train_data[i]
+  
+            
+
+        else:
+            img = self.train_data[i]
+
+        
+        # some operations/transformations
+        return img
+      
 class autoencoder(nn.Module):
     def __init__(self):
         super(autoencoder, self).__init__()
-        self.encoder_1 = nn.Sequential(
+        self.encoder = nn.Sequential(
             nn.Conv2d(3, 64, 3, stride=1, padding=1),  # b, 64, 32, 32
-            nn.BatchNorm2d(64),
             nn.LeakyReLU(0.2),
-            nn.Conv2d(64, 64, 3, stride=1, padding=1),  # b, 64, 32, 32
-            nn.BatchNorm2d(64),
+            nn.Conv2d(64, 64, 3, stride=2, padding=1),  # b, 64, 16, 16
+            nn.LeakyReLU(0.2),
+            
+            nn.Conv2d(64, 128, 3, stride=1, padding=1),  # b, 128, 16, 16
+            nn.LeakyReLU(0.2),
+            nn.Conv2d(128, 256, 3, stride=2, padding=1),  # b, 256, 8, 8
+            nn.LeakyReLU(0.2)
+            
+        )
+        self.encoder_fc = nn.Sequential(
+            nn.Linear(256*8*8, 256),
             nn.LeakyReLU(0.2)
         )
-        self.pool_1 = nn.MaxPool2d(2, stride=2, return_indices=True)  # b, 64, 16, 16
-        self.encoder_2 = nn.Sequential(
-            nn.Conv2d(64, 32, 3, stride=1, padding=1),  # b, 32, 16, 16
-            nn.BatchNorm2d(32),
-            nn.LeakyReLU(0.2),
-            nn.Conv2d(32, 32, 3, stride=1, padding=1),  # b, 32, 16, 16
-            nn.BatchNorm2d(32),
+        self.decoder_fc = nn.Sequential(
+            nn.Linear(256, 256*8*8),
             nn.LeakyReLU(0.2)
         )
-        self.pool_2 = nn.MaxPool2d(2, stride=2, return_indices=True)  # b, 32, 8, 8
-
-        # code = (batch, 512)
-        self.encode_fc = nn.Sequential(
-            nn.Linear(32*8*8, 32*8*8),
-            nn.Linear(32*8*8, 8*8*8)
-        )
-        self.decode_fc = nn.Sequential(
-            nn.Linear(8*8*8, 32*8*8),
-            nn.Linear(32*8*8, 32*8*8)
-        )
-
-        self.decoder_1 = nn.Sequential(
-
-            nn.ConvTranspose2d(32, 32, 3, stride=1, padding=1),  # b, 32, 8, 8
-            nn.BatchNorm2d(32),
+        self.decoder = nn.Sequential(
+            nn.ConvTranspose2d(256, 128, 3, stride=2, padding=1, output_padding = 1),  # b, 128, 16, 16
             nn.LeakyReLU(0.2),
-            nn.ConvTranspose2d(32, 32, 3, stride=1, padding=1),  # b, 32, 8, 8
-            nn.BatchNorm2d(32),
-            nn.LeakyReLU(0.2)
-        )
-        self.unpool_1 = nn.MaxUnpool2d(2, stride=2)  # b, 32, 16, 16
-
-        self.decoder_2 = nn.Sequential(
-            nn.ConvTranspose2d(32, 64, 3, stride=1,
-                               padding=1),  # b, 64, 16, 16
-            nn.BatchNorm2d(64),
+            nn.ConvTranspose2d(128, 64, 3, stride=2, padding=1, output_padding = 1),  # b, 64, 32, 32
             nn.LeakyReLU(0.2),
-            nn.ConvTranspose2d(64, 64, 3, stride=1,
-                               padding=1),  # b, 64, 16, 16
-            nn.BatchNorm2d(64),
-            nn.LeakyReLU(0.2)
-        )
-
-        self.unpool_2 = nn.MaxUnpool2d(2, stride=2)  # b, 64, 32, 32
-
-        self.decoder_3 = nn.Sequential(
+            nn.ConvTranspose2d(64, 64, 3, stride=1, padding=1),  # b, 64, 32, 32
+            nn.LeakyReLU(0.2),
             nn.ConvTranspose2d(64, 3, 3, stride=1, padding=1),  # b, 3, 32, 32
             nn.Tanh()
         )
 
+        self.encoder.apply(gaussian_weights_init)
+        self.encoder_fc.apply(gaussian_weights_init)
+        self.decoder_fc.apply(gaussian_weights_init)
+        self.decoder.apply(gaussian_weights_init)
+
     def forward(self, x):
-        batchsize = x.shape[0]
+        x=self.encoder(x)
+        x= x.view(x.shape[0], 256*8*8)
+        x= self.encoder_fc(x)
+        x= self.decoder_fc(x)
+        x = x.view(x.shape[0],256,8,8)
+        x=self.decoder(x)
 
-        # print('encoder')
-        x = self.encoder_1(x)
-        x, indice_1 = self.pool_1(x)
-        x = self.encoder_2(x)
-        x, indice_2 = self.pool_2(x)
-
-        # print('view1')
-        x = x.view(batchsize, 32*8*8)
-        # print('encode_fc')
-        x = self.encode_fc(x)
-        # print('decode_fc')
-        x = self.decode_fc(x)
-        # print('view2')
-        x = x.view(batchsize, 32, 8, 8)
-        # print('decoder')
-        x = self.decoder_1(x)
-        x = self.unpool_1(x, indice_2)
-        x = self.decoder_2(x)
-        x = self.unpool_2(x, indice_1)
-        x = self.decoder_3(x)
         return x
 
     def encode(self, images):
-        batchsize = images.shape[0]
-        x = self.encoder_1(images)
-        x, indice_1 = self.pool_1(x)
-        x = self.encoder_2(x)
-        x, indice_2 = self.pool_2(x)
-        x = x.view(batchsize, 32*8*8)
-        x = self.encode_fc(x)
-        return indice_1, indice_2, x
-
-    def decode(self, indice_1, indice_2, code):
-        batchsize = code.shape[0]
-        x = self.decode_fc(code)
-        x = x.view(batchsize, 32, 8, 8)
-        x = self.decoder_1(x)
-        x = self.unpool_1(x, indice_2)
-        x = self.decoder_2(x)
-        x = self.unpool_2(x, indice_1)
-        x = self.decoder_3(x)
+        x=self.encoder(images)
+        x= x.view(images.shape[0], 256*8*8)
+        x= self.encoder_fc(x)
         return x
 
+    def decode(self, code):
+        x= self.decoder_fc(code)
+        x = x.view(code.shape[0],256,8,8)
+        x=self.decoder(x)
+        return x
 
+def gaussian_weights_init(m):
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1 and classname.find('Conv') == 0:
+        m.weight.data.normal_(0.0, 0.02)
+        
 def read_image(input_dir, val=0):
     print('reading images...')
 #     images = []
@@ -132,9 +139,11 @@ def read_image(input_dir, val=0):
 #     images = np.array(images)
 #     np.save('images',images)
     images = np.load('/content/drive/My Drive/ML2019/hw7/data/images.npy')
+    
     print('iamges shape: ', images.shape)
     print('iamges dtype: ', images.dtype)
     # print(images[0])
+    
 
     if(val != 0):
         n = images.shape[0]
@@ -151,9 +160,10 @@ def read_image(input_dir, val=0):
 
 
 if __name__ == '__main__':
-    train_x, val_x = read_image('data/images/', val=0.2)
+    train_x, val_x = read_image('data/images/', val=0.1)
 
-    train_set = TensorDataset(train_x)
+    print(train_x.shape)
+    train_set = MyDataset(train_x, augmentation=5)
     val_set = TensorDataset(val_x)
 
     num_epoch = 500
@@ -194,8 +204,8 @@ if __name__ == '__main__':
         for i, data in enumerate(train_loader):
             optimizer.zero_grad()
             # print(data[0].shape)
-            train_pred = model(data[0].cuda())
-            batch_loss = loss(train_pred, data[0].cuda())
+            train_pred = model(data.cuda())
+            batch_loss = loss(train_pred, data.cuda())
 #             train_pred = model(data[0])
 #             batch_loss = loss(train_pred, data[0])
             batch_loss.backward()

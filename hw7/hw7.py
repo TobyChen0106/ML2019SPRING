@@ -12,34 +12,17 @@ from torch.utils.data import TensorDataset, DataLoader
 from skimage import io
 import numpy as np
 from PIL import Image
-import time
+import sys
 from sklearn.cluster import KMeans
 import pandas as pd
 import gc
 
-def read_image(input_dir):
-    print('reading images...')
-    # images = []
-    # for i in range(40000):
-    #     image = Image.open(input_dir+'%06d.jpg' % (i+1))
-    #     image = np.array(image)
-    #     image = (image - 127.5)/127.5   # (-1 ~ 1)
-    #     images.append(image)
-    # images = np.array(images)
-    # np.save('images',images)
-    images = np.load('data/images.npy')
-    print('iamges shape: ', images.shape)
-    print('iamges dtype: ', images.dtype)
-    # print(images[0])
-
-    return images
 
 
 if __name__ == '__main__':
-    # images = read_image('data/images/')
-    x_tsne = np.load('data/x_tsne_4_m3.npy')
+    x_tsne = np.load('models/my_x_tsne.npy')
     kmeans = KMeans(n_clusters=2, random_state=0).fit(x_tsne)
-    test_case = pd.read_csv('data/test_case.csv').values[:, 1:3]
+    test_case = pd.read_csv(sys.argv[2]).values[:, 1:3]
     print(x_tsne.shape)
     print(test_case.shape)
 
@@ -48,11 +31,13 @@ if __name__ == '__main__':
     result_csv.append(['id', 'label'])
     test_num = test_case.shape[0]
 
-    x_tsne_label = np.zeros(test_case.shape[0], dtype =  'int32')
+    x_tsne_label = np.zeros(x_tsne.shape[0], dtype =  'int32')
+
     for i, feature in enumerate( x_tsne):
         result = kmeans.predict([feature])
         x_tsne_label[i] = int(result[0])
     print('x_tsne_label', x_tsne_label)
+
     for i, test in enumerate(test_case):
         # print(x_tsne[test[0]])
         result1 = x_tsne_label[test[0]-1]
@@ -71,6 +56,7 @@ if __name__ == '__main__':
         back = '\b'*len(msg)
         print(back, end = '',flush = True)
 
+
     result_csv = np.array(result_csv)
     print(result_csv.shape)
-    np.savetxt('result.csv', result_csv, delimiter=",", fmt="%s")
+    np.savetxt(sys.argv[3], result_csv, delimiter=",", fmt="%s")
