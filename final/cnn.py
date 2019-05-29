@@ -14,13 +14,13 @@ from PIL import Image
 import io
 
 num_epochs = 50
-batch_size = 25
+batch_size = 10
 lr = 0.001
 val = 0.1
 
 data_path = ''
 label_path = ''
-output_model_path = ''
+output_model_path = 'best_model.pth'
 
 
 def load_data_from_npy(train_data_path, train_label_path, val=0.2):
@@ -118,10 +118,14 @@ class MyDataset(Dataset):
 
 def main():
     train_data, val_data, train_labels, val_labels = load_data_from_npy(
-        'train_data.npy', 'train_label.npy', val=0.2)
+        'data/train_data.npy', 'data/train_label.npy', val=0.2)
 
-    print(train_data.shape)
-    print(train_labels.shape)
+    print(train_data.shape[0])
+    print(train_labels.shape[0])
+
+    train_data_n = train_data.shape[0]
+    val_data_n = val_data.shape[0]
+
 
     train_set = MyDataset(train_data, train_labels)
     test_set = MyDataset(val_data, val_labels)
@@ -154,6 +158,7 @@ def main():
             train_loss += loss.item()
 
         for test_feature, test_label in test_iter:
+            test_label = test_label.squeeze(1)
             model.eval()
             m += 1
             test_score = model(test_feature.cuda())
@@ -168,7 +173,7 @@ def main():
         end = time.time()
         runtime = end - start
         print('epoch: %d, train loss: %.6f, train acc: %.5f, test loss: %.6f, test acc: %.5f, time: %.3f' %
-              (epoch, train_loss.data / n, train_acc / n, test_losses.data / m, test_acc / m, runtime))
+              (epoch, train_loss / n, train_acc / train_data_n, test_losses / m, test_acc / val_data_n, runtime))
 
 
 if __name__ == '__main__':

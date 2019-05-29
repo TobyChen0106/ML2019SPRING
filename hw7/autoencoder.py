@@ -138,7 +138,7 @@ def read_image(input_dir, val=0):
 #         images.append(image)
 #     images = np.array(images)
 #     np.save('images',images)
-    images = np.load('/content/drive/My Drive/ML2019/hw7/data/images.npy')
+    images = np.load('data/images.npy')
     
     print('iamges shape: ', images.shape)
     print('iamges dtype: ', images.dtype)
@@ -236,16 +236,16 @@ if __name__ == '__main__':
 
         if(val_loss/val_batch_num < best_loss):
             # with open('/content/drive/My Drive/ML2019/hw6/models/acc.txt', 'w') as f:
-            with open('/content/drive/My Drive/ML2019/hw7/models/acc.txt', 'w') as f:
+            with open('models/acc.txt', 'w') as f:
                 f.write('-BEST MODEL -\nepoch: ' + str(epoch)+'/' +
                         str(num_epoch)+'\t'+'val_loss: '+str(val_loss/val_batch_num)+'\n')
             torch.save(
-                model.state_dict(), '/content/drive/My Drive/ML2019/hw7/models/best_model.pth')
+                model.state_dict(), 'models/best_model.pth')
             best_loss = val_loss/val_batch_num
             print('** Best Model Updated! ***\n')
 
     torch.save(model.state_dict(),
-               '/content/drive/My Drive/ML2019/hw7/models/final_model.pth')
+               'models/final_model.pth')
 
     # log
     # train_loss_log = np.array(train_loss_log)
