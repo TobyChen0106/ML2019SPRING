@@ -14,8 +14,8 @@ from PIL import Image
 import io
 
 num_epochs = 50
-batch_size = 10
-lr = 0.001
+batch_size = 100
+lr = 0.0005
 val = 0.1
 
 data_path = ''
@@ -134,7 +134,7 @@ def main():
     print(train_iter)
     model = Classifier().cuda()
     loss_function = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters())
+    optimizer = torch.optim.Adam(model.parameters(), lr = lr)
 
     best_acc = 0
     for epoch in range(num_epochs):
