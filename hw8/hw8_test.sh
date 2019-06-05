@@ -1,0 +1,1 @@
+python3 test_hw8.py "$1" "$2"
