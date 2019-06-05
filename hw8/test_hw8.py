@@ -46,7 +46,7 @@ def readfile_from_np(test_file_path):
     #     test_data[i] = data_transformations(test_data[i])
     return test_data
 
-def readfile_from_csv(test_file_path):
+def readfile_from_csv( test_file_path, seed=0):
     # print("Reading csv File...")
     
     data = io.StringIO(open(test_file_path).read().replace(',',' '))
@@ -60,13 +60,13 @@ def readfile_from_csv(test_file_path):
     # np.save('data/test_data',test_data)
 
     for i in range(len(test_data)):
-        torch.manual_seed(0)
-        torch.cuda.manual_seed(0)
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed(seed)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
-        np.random.seed(0)
-        random.seed(0)
-        test_data[i] = data_transformations(test_data[i])
+        np.random.seed(seed)
+        random.seed(seed)
+        test_data[seed] = data_transformations(test_data[i])
 
     return test_data
 
@@ -134,7 +134,7 @@ class Net(nn.Module):
 def main():
 
     batch_size = 256
-    test_num = 1
+    test_num = 20
 
     # model = Net().cuda()
     # _dict = torch.load('models/best_model.pth')
@@ -149,7 +149,7 @@ def main():
         back = '\b'*len(msg)
         # print(back, flush = True)
         
-        test_data = readfile_from_csv(sys.argv[1])
+        test_data = readfile_from_csv(sys.argv[1], seed=ni)
         test_set = TensorDataset(test_data)     
         test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=0, worker_init_fn=np.random.seed(0))
         
