@@ -12,6 +12,11 @@ import pandas as pd
 from PIL import Image
 import io
 
+def gaussian_weights_init(m):
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1 and classname.find('Conv') == 0:
+        m.weight.data.normal_(0.0, 0.02)
+
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
@@ -29,7 +34,6 @@ class Net(nn.Module):
                 nn.Conv2d(inp, inp, 3, stride, 1, groups=inp, bias=False),
                 nn.ReLU(inplace=True),
                 nn.BatchNorm2d(inp),
-                nn.Dropout(0.2),
 
                 nn.Conv2d(inp, oup, 1, 1, 0, bias=False),
                 nn.ReLU(inplace=True),

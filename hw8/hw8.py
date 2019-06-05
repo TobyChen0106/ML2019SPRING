@@ -157,7 +157,7 @@ class Net(nn.Module):
                 nn.Conv2d(inp, oup, 3, stride, 1, bias=False),
                 nn.ReLU(inplace=True),
                 nn.BatchNorm2d(oup),
-                nn.Dropout(0.2)
+                nn.Dropout(0.1)
             )
 
         def conv_dw(inp, oup, stride):
@@ -165,12 +165,11 @@ class Net(nn.Module):
                 nn.Conv2d(inp, inp, 3, stride, 1, groups=inp, bias=False),
                 nn.ReLU(inplace=True),
                 nn.BatchNorm2d(inp),
-                nn.Dropout(0.2),
 
                 nn.Conv2d(inp, oup, 1, 1, 0, bias=False),
                 nn.ReLU(inplace=True),
                 nn.BatchNorm2d(oup),
-                nn.Dropout(0.2)
+                nn.Dropout(0.1)
             )
 
         self.model = nn.Sequential(
@@ -286,6 +285,7 @@ def main():
             best_acc = val_acc
             print('** Best Model Updated! ***\n')
 
+    torch.save(model.state_dict(), 'models/final_model.pth')
 
 if __name__ == '__main__':
     main()

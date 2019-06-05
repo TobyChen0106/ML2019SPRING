@@ -16,6 +16,7 @@ from PIL import Image
 import io
 from extract import extract
 import gc 
+import random
 
 data_transformations = transforms.Compose([
     transforms.ToPILImage(),
@@ -59,6 +60,12 @@ def readfile_from_csv(test_file_path):
     # np.save('data/test_data',test_data)
 
     for i in range(len(test_data)):
+        torch.manual_seed(0)
+        torch.cuda.manual_seed(0)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+        np.random.seed(0)
+        random.seed(0)
         test_data[i] = data_transformations(test_data[i])
 
     return test_data
@@ -127,13 +134,13 @@ class Net(nn.Module):
 def main():
 
     batch_size = 256
-    test_num = 20
+    test_num = 1
 
-    model = Net().cuda()
-    _dict = torch.load('models/best_model.pth')
-    model.load_state_dict(_dict)
+    # model = Net().cuda()
+    # _dict = torch.load('models/best_model.pth')
+    # model.load_state_dict(_dict)
 
-    # model = extract('models/compressed_weight.npz')
+    model = extract('compressed_weight.6453.npz')
     # test_data = readfile_from_csv('data/test.csv')
     gc.collect()
     for ni in range(test_num):
@@ -144,7 +151,7 @@ def main():
         
         test_data = readfile_from_csv(sys.argv[1])
         test_set = TensorDataset(test_data)     
-        test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=8)
+        test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=0, worker_init_fn=np.random.seed(0))
         
         
         model.eval()
@@ -181,4 +188,10 @@ def main():
            
 
 if __name__ == '__main__':
+    torch.manual_seed(0)
+    torch.cuda.manual_seed(0)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    np.random.seed(0)
+    random.seed(0)
     main()
