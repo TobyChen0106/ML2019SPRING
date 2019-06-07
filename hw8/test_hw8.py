@@ -1,5 +1,3 @@
-from __future__ import print_function
-# import argparse
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -8,10 +6,7 @@ from torchvision import datasets, transforms
 from torch.utils.data import Dataset
 from torch.utils.data import TensorDataset, DataLoader
 import sys
-# import csv
-# import time
 import numpy as np
-import pandas as pd
 from PIL import Image
 import io
 from extract import extract
@@ -66,7 +61,7 @@ def readfile_from_csv( test_file_path, seed=0):
         torch.backends.cudnn.benchmark = False
         np.random.seed(seed)
         random.seed(seed)
-        test_data[seed] = data_transformations(test_data[i])
+        test_data[i] = data_transformations(test_data[i])
 
     return test_data
 

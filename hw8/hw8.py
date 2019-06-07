@@ -192,7 +192,7 @@ class Net(nn.Module):
             # nn.LeakyReLU(0.2),
             # nn.Dropout(p=0.5),
             nn.Linear(256, 7),
-            nn.Dropout(0.2)        )
+            nn.Dropout(0.1)        )
         self.model.apply(gaussian_weights_init)
         self.fc.apply(gaussian_weights_init)
 
