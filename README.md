@@ -25,3 +25,5 @@
 # Homework 8 - Model Compression for Image Sentiment Classification
 - [homework website](https://ntumlta2019.github.io/ml-web-hw8/?fbclid=IwAR1_jkEWdUSUq2nymgR8qMIsaYx18fApkNeg1C53qcmAHfWS17yaL_Rpj3U)
 
+# Final - Medical Image Detection
+- [homework website](https://docs.google.com/presentation/d/1C2bVr8BiJinadp1hSYC6M8GdafDC_3Mryu1e-4cILCc/edit#slide=id.g56b030415f_1_20)
