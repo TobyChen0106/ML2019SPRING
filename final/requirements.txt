@@ -1,0 +1,10 @@
+tk-dev python-tk
+cffi
+pandas
+pycocotools
+cython
+opencv-python
+requests
+cuda-8.0
+torch==0.4.1
+torchvision==0.1.6

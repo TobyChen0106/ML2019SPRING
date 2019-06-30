@@ -4,38 +4,38 @@ import io
 import sys
 import gc
 
-test_img_num = 100  # 4998
-score_limit = 0.97
+test_img_num = 4998  # 4998
+score_limit = 1.23
 n = 57
 cv2.setUseOptimized(True)
 cv2.setNumThreads(4)
 label = []
 output = []
-
+# output.append("patientId,x,y,width,height,Target")
 
 print('start doing selective search...')
 
 cv2.setUseOptimized(True)
 cv2.setNumThreads(16)
-
+testTrain = "test"
 for i in range(test_img_num):
-    # msg = "solving [%06d/%06d]" % (i, test_img_num)
-    # print(msg, end='', flush=True)
-    # back = '\b'*len(msg)
-    # print(back, end='', flush=True)
+    msg = "solving [%06d/%06d]" % (i, test_img_num)
+    print(msg, end='', flush=True)
+    back = '\b'*len(msg)
+    print(back, end='', flush=True)
 
     la = False
     # img_path = 'test_map/test_img%d.png' % i
     # im_path_ori = 'data/test/test%04d.png' % (i)
 
-    img_path = 'train_map/train_img%d.png' % i
-    im_path_ori = 'data/train/train%05d.png' % (i)
+    img_path = '%s_map/%s_img%d.png' % (testTrain, testTrain,i)
+    im_path_ori = 'data/%s/%s%04d.png' % (testTrain, testTrain, i)
 
     im = cv2.imread(img_path)
     # print(im.shape)
-    im_ori = cv2.imread(im_path_ori)
-    imOut = im.copy()
-    imOut_ori = im_ori.copy()
+    # im_ori = cv2.imread(im_path_ori)
+    # imOut = im.copy()
+    # imOut_ori = im_ori.copy()
     # print('im max',np.array(im).max())
     # print('im min',np.array(im).min())
     # left half plane
@@ -84,7 +84,7 @@ for i in range(test_img_num):
         new_rects_left = np.array(new_rects_left).reshape(-1, 4)
         max_id_left = np.argmax(score_left)
 
-        print('[%d] best score of left = ' % i, score_left[max_id_left])
+        # print('[%d] best score of left = ' % i, score_left[max_id_left])
 
         if score_left[max_id_left] > score_limit:
             # print('!!!!left tumer detected!!!!!')
@@ -137,7 +137,7 @@ for i in range(test_img_num):
         new_rects_right = np.array(new_rects_right).reshape(-1, 4)
         max_id_right = np.argmax(score_right)
 
-        print('[%d] best score of right = ' % i, score_right[max_id_right])
+        # print('[%d] best score of right = ' % i, score_right[max_id_right])
 
         if score_right[max_id_right] > score_limit:
             # print('!!!!right tumer detected!!!!!')
@@ -163,5 +163,5 @@ for i in range(test_img_num):
 
 output = np.array(output).reshape(-1, 6)
 np.savetxt("train_output.csv", output, delimiter=",")
-# np.save('output.npy', output)
+np.save('output.npy', output)
 print('output shape = ', output.shape)

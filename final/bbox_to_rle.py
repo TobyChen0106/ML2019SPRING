@@ -12,9 +12,9 @@ import sys, os
 
 from PIL import ImageFile
 
-IN_CSV = "./prediction.csv"
+IN_CSV = "./data/train_labels.csv"
 OUT_CSV = "./submission.csv"
-IMG_DIR = "./test" # read image for calculating images' shape
+IMG_DIR = "./data/train" # read image for calculating images' shape
 
 
 def main():    
